@@ -1,47 +1,63 @@
-import React from 'react';
-import bruschetta from '../images/bruschetta.jpg';
-import greek_salad from '../images/greek_salad.jpg';
-import lemon_dessert from '../images/lemon_dessert.jpg';
-import special_dish from '../images/special_dish.jpg';
+import React, { useReducer, useCallback } from "react";
+import { Route, Routes, useNavigate } from "react-router-dom";
+import Booking from "./Booking";
+import ConfirmedBooking from "./ConfirmedBooking";
+import Header from "./Header";
 
-function Main() {
-  return (
-    <main>
-      <section className="intro">
-        <h2>Little Lemon</h2>
-        <p>
-          Chicago<br />
-          We are a family owned Mediterranean restaurant, focused on traditional recipes served with a modern twist.
-        </p>
-        <button>Reserve a Table</button>
-      </section>
-      <img src={special_dish} alt="Special dish" className="special-img"/>
-      <section className="specials">
-        <h2>This week's specials!</h2>
-        <button>Online Menu</button>
-        <div className="cards">
-          <article className="card">
-            <img src={greek_salad} alt="Greek Salad" />
-            <h3>Greek Salad</h3>
-            <p>Description text here</p>
-            <button>Order a delivery</button>
-          </article>
-          <article className="card">
-            <img src={bruschetta} alt="Bruschetta" />
-            <h3>Bruschetta</h3>
-            <p>Description text here</p>
-            <button>Order a delivery</button>
-          </article>
-          <article className="card">
-            <img src={lemon_dessert} alt="Lemon Dessert" />
-            <h3>Lemon Dessert</h3>
-            <p>Description text here</p>
-            <button>Order a delivery</button>
-          </article>
-        </div>
-      </section>
-    </main>
-  );
+
+const Main = () => {
+
+    const seedRandom = function (seed) {
+        var m = 2**35 - 31;
+        var a = 185852;
+        var s = seed % m;
+        return function () {
+            return (s = s * a % m) / m;
+        };
+    }
+
+    const fetchAPI = function(date) {
+        let result = [];
+        let random = seedRandom(date.getDate());
+
+        for(let i = 17; i <= 23; i++) {
+            if(random() < 0.5) {
+                result.push(i + ':00');
+            }
+            if(random() < 0.5) {
+                result.push(i + ':30');
+            }
+        }
+        return result;
+    };
+    const submitAPI = function(formData) {
+        return true;
+    };
+
+    const initialState = {availableTimes:  fetchAPI(new Date())}
+    const [state, dispatch] = useReducer(updateTimes, initialState);
+
+    function updateTimes(state, date) {
+        return {availableTimes: fetchAPI(new Date(date))}
+    }
+    const navigate = useNavigate();
+    const submitForm = useCallback((formData) => {
+        if (submitAPI(formData)) {
+            navigate("/confirmed");
+        }
+    }, [submitAPI, navigate]);
+
+    return(
+        <main className="main">
+            <Routes>
+                <Route path="/" element={<Header />} />
+                <Route path="/booking" element={<Booking availableTimes={state} dispatch={dispatch} submitForm={submitForm}/>} />
+                <Route path="/confirmed" element={<ConfirmedBooking/> } />
+            </Routes>
+        </main>
+
+
+    )
 }
 
 export default Main;
